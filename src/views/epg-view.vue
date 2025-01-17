@@ -22,14 +22,11 @@ const calWeekdays = ref(calWeekdaysGen());
 
 const curWeekdays = computed(() => curWeekdaysGen(selDate.value));
 
-const selWeekdayAction = (date) => {
-  selDate.value = date;
-  getEpgHandler();
-};
-
-const selChannelAction = (id) => {
-  selChannelId.value = id;
-  getEpgHandler();
+const timeState = (item) => {
+  const t = Date.now();
+  return item.endTime * 1000 <= t ? 'past' :
+      item.startTime * 1000 <= t ? 'live' :
+          'future';
 };
 
 const getEpgHandler = () => {
@@ -51,27 +48,38 @@ const getEpgHandler = () => {
       })
       .then(() => {
         nextTick(() => {
-          liveProgrammeDom.value?.[0] && liveProgrammeDom.value[0].parentElement.scrollIntoView({block: 'center'});
+          liveProgrammeDom.value?.[0]?.parentElement?.scrollIntoView({block: 'center'});
         })
       })
-      .catch(ex => {
-        // console.log(ex);
+      .catch(reason => {
+        // console.log(reason);
       })
   ;
 };
 
-getEpgHandler();
+const selWeekdayAction = (date) => {
+  selDate.value = date;
+  getEpgHandler();
+};
+
+const selChannelAction = (id) => {
+  selChannelId.value = id;
+  getEpgHandler();
+};
 
 const prevMonAction = (ym) => {
   const newYm = DateTime.fromFormat(ym, 'yyyy-MM').plus({month: -1});
   const earliest = DateTime.now().plus({month: -3, day: 1}).startOf('month');
   newYm >= earliest && (calWeekdays.value = calWeekdaysGen(newYm));
 };
+
 const nextMonAction = (ym) => {
   const newYm = DateTime.fromFormat(ym, 'yyyy-MM').plus({month: 1});
   const latest = DateTime.now().plus({day: 6}).plus({month: -1}).startOf('month');
   newYm <= latest && (calWeekdays.value = calWeekdaysGen(newYm));
 };
+
+getEpgHandler();
 
 </script>
 
@@ -121,7 +129,7 @@ const nextMonAction = (ym) => {
     </div>
 
     <div class="epg-guides" :class="{'epg-guides-fetching': statefulFetch.fetching.value}">
-      <div v-if="statefulFetch.error.value">获取遇到错误</div>
+      <div v-if="statefulFetch.error.value">网络遇到错误</div>
 
       <template v-if="epg && !statefulFetch.error.value">
         <template
@@ -132,16 +140,21 @@ const nextMonAction = (ym) => {
                 DateTime.fromSeconds(e.startTime).toLocaleString(DateTime.TIME_24_SIMPLE)
               }}</span>
 
-            <span class="copy-all flex-grow">{{ e.title }}</span>
+            <span class="copy-all flex-grow epg-item-title"
+                  :class="{'epg-item-current-title': timeState(e) === 'live'}">{{ e.title }}</span>
 
-            <a :href="e.column_url" v-if="e.column_url" target="column" class="epg-item-column">往期视频</a>
+            <a class="epg-item-column" target="column"
+               :href="e.column_url" v-if="e.column_url">往期视频</a>
 
-            <a :href="renderPlaybackUrl(epg.lvUrl, e.startTime, e.endTime)" v-if="e.endTime * 1000 <= Date.now()"
-               target="playback" class="epg-item-link epg-item-link-back"
-               :class="{'epg-item-link-disabled': selDate < DateTime.now().plus({day:-7})}">回看</a>
+            <a class="epg-item-link epg-item-link-back" target="playback"
+               :href="renderPlaybackUrl(epg.lvUrl, e.startTime, e.endTime)"
+               :class="{'epg-item-link-disabled': selDate < DateTime.now().plus({day:-7})}"
+               v-if="timeState(e) === 'past'"
+            >回看</a>
 
-            <a :href="epg?.lvUrl" v-else-if="e.startTime * 1000 <= Date.now()" target="live"
-               class="epg-item-link epg-item-link-live" ref="liveProgramme">直播中</a>
+            <a class="epg-item-link epg-item-link-live" target="live"
+               :href="epg?.lvUrl" v-else-if="timeState(e) === 'live'"
+               ref="liveProgramme">直播中</a>
 
             <span v-else class="epg-item-link epg-item-link-future">未开始</span>
           </div>
@@ -430,7 +443,7 @@ html, body, #app {
 
 .epg-item {
   padding: 12px 0;
-  box-sizing: border-box;
+  /*box-sizing: border-box;*/
 
   font-size: 18px;
 
@@ -445,6 +458,17 @@ html, body, #app {
   width: 96px;
   display: flex;
   justify-content: center;
+  align-items: center;
+}
+
+.epg-item-title {
+  font-family: sans-serif;
+  line-height: 1.1;
+}
+
+.epg-item-current-title {
+  color: red;
+  font-weight: 900;
 }
 
 .epg-item-column {

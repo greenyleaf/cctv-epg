@@ -21,7 +21,8 @@ export const calWeekdaysGen = (startMonth) => {
     // const validStart = DateTime.now().plus({day: -27});
     // const validStart = DateTime.now().plus({month: -1}).startOf('month');
     const validStart = DateTime.now().plus({month: -3, day: 1}).startOf('day');
-    const validEnd = DateTime.now().plus({day: 6});
+    // const validEnd = DateTime.now().plus({day: 6});
+    const validEnd = DateTime.now().plus({week: 1}).endOf('week').startOf('day');
 
     // const start = validEnd.plus({month: -1}).startOf('month');
     // const end = validEnd.endOf('month');
