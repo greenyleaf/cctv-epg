@@ -223,7 +223,7 @@ html, body, #app {
 
   background: none;
 
-  padding: 4px 4px;
+  padding: 4px 6px;
 
   display: flex;
   flex-direction: column;
@@ -252,7 +252,9 @@ html, body, #app {
   align-items: center;
 
   border-radius: 8px;
-  padding: 4px 4px;
+  padding: 4px 6px;
+
+  font-size: 14px;
 }
 
 .cal-popup {
