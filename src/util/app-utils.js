@@ -93,6 +93,8 @@ export const calendarItemsGen = () => {
 };
 
 export const renderPlaybackUrl = (lvUrl, start, end) => {
+    /[/][^.]+$/.test(lvUrl) &&
+    (lvUrl += '/');
     return `${lvUrl}?stime=${start}&etime=${end}&type=lbacks`;
 };
 
