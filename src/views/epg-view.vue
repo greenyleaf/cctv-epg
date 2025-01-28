@@ -204,10 +204,14 @@ html, body, #app {
   flex-direction: column;
 
   transition: filter .2s;
+
+  scrollbar-width: thin;
 }
 
 .epg-guides {
   overflow-y: auto;
+
+  scrollbar-width: thin;
 }
 
 .weekdays-container {
