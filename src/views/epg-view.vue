@@ -1,63 +1,98 @@
 <script setup>
 
 // const timer = useDebounceTimer();
-// const appFetch = useStatefulFetch();
 
-import {calWeekdaysGen, curWeekdaysGen, renderPlaybackUrl} from "@/util/app-utils.js";
+import {curWeekdaysGen, renderProgrammeUrl} from "@/util/app-utils.js";
 import {DateTime, Settings} from "luxon";
-import {channels, weekdays} from "@/util/app-constants.js";
-import {computed, nextTick, ref, useTemplateRef} from "vue";
+import {computed, nextTick, onBeforeMount, onUnmounted, ref, useTemplateRef} from "vue";
 import {useStatefulFetch} from "@/composables/statefulFetch.js";
+import LayoutListChannel from "@/layout/layout-list-channel.vue";
+import EpgCalendar from "@/views/epg-view/epg-calendar.vue";
+import EpgProgramme from "@/views/epg-view/epg-programme.vue";
 
 Settings.defaultLocale = 'zh-CN';
 
 const selDate = ref(DateTime.now().startOf('day'));
 const selChannelId = ref('cctv1');
 const epg = ref();
-const liveProgrammeDom = useTemplateRef('liveProgramme');
+const filterEpgHandle = ref();
+const programmeLayoutDom = useTemplateRef('programme-layout');
 
-let statefulFetch = useStatefulFetch();
-
-const calWeekdays = ref(calWeekdaysGen());
+let appFetch = useStatefulFetch();
 
 const curWeekdays = computed(() => curWeekdaysGen(selDate.value));
-
-const timeState = (item) => {
-  const t = Date.now();
-  return item.endTime * 1000 <= t ? 'past' :
-      item.startTime * 1000 <= t ? 'live' :
-          'future';
-};
 
 const getEpgHandler = () => {
   const noon = selDate.value.set({
     hour: 12,
   }).toUnixInteger();
 
-  statefulFetch.statefulFetch(selChannelId.value, selDate.value.toFormat('yyyyMMdd'))
-      // epgApiGet(selChannelId.value, selDate.value.toFormat('yyyyMMdd'))
+  appFetch.statefulFetch(selChannelId.value, selDate.value.toFormat('yyyyMMdd'))
       .then(r => {
         const idx = r.list.findIndex(e => e.startTime >= noon);
 
-        r.amList = r.list.slice(0, idx);
-        r.pmList = r.list.slice(idx);
+        for (const i of r.list) {
+          i.startTimeText = DateTime.fromSeconds(i.startTime).toLocaleString(DateTime.TIME_24_SIMPLE);
+        }
 
-        delete r.list;
+        epg.value = {
+          lvUrl: r.lvUrl,
+          amList: r.list.slice(0, idx),
+          pmList: r.list.slice(idx)
+        };
 
-        epg.value = r;
+        clearTimeout(filterEpgHandle.value);
+        filterEpg();
       })
       .then(() => {
         nextTick(() => {
-          liveProgrammeDom.value?.[0]?.parentElement?.scrollIntoView({block: 'center'});
-        })
+          programmeLayoutDom.value
+              .querySelector('[data-live-item]')
+              ?.scrollIntoView({block: 'center'});
+        });
       })
       .catch(reason => {
         // console.log(reason);
-      })
-  ;
+      });
 };
 
-const selWeekdayAction = (date) => {
+const filterEpg = () => {
+  if (!epg.value) {
+    return;
+  }
+
+  const nowSec = Math.trunc(Date.now() / 1000);
+  const replayStartSec = DateTime.now().startOf('day').plus({day: -6}).toSeconds();
+
+  const setState = (item) => {
+    if (item.endTime <= nowSec) {
+      item.timeState = 'past';
+
+      item.replay = item.startTime > replayStartSec;
+
+      item.link = renderProgrammeUrl(epg.value.lvUrl, item.startTime, item.endTime);
+    } else if (item.startTime <= nowSec) {
+      item.timeState = 'live';
+
+      item.link = epg.value.lvUrl;
+    } else {
+      item.timeState = 'future';
+    }
+
+    item.replay ??= false;
+  };
+
+  for (const item of epg.value.amList) {
+    setState(item);
+  }
+  for (const item of epg.value.pmList) {
+    setState(item);
+  }
+
+  filterEpgHandle.value = setTimeout(filterEpg, 1000);
+};
+
+const selDateAction = (date) => {
   selDate.value = date;
   getEpgHandler();
 };
@@ -67,98 +102,47 @@ const selChannelAction = (id) => {
   getEpgHandler();
 };
 
-const prevMonAction = (ym) => {
-  const newYm = DateTime.fromFormat(ym, 'yyyy-MM').plus({month: -1});
-  const earliest = DateTime.now().plus({month: -3, day: 1}).startOf('month');
-  newYm >= earliest && (calWeekdays.value = calWeekdaysGen(newYm));
-};
+onBeforeMount(() => {
+  getEpgHandler();
+});
 
-const nextMonAction = (ym) => {
-  const newYm = DateTime.fromFormat(ym, 'yyyy-MM').plus({month: 1});
-  const latest = DateTime.now().plus({day: 6}).plus({month: -1}).startOf('month');
-  newYm <= latest && (calWeekdays.value = calWeekdaysGen(newYm));
-};
-
-getEpgHandler();
+onUnmounted(() => {
+  clearTimeout(filterEpgHandle.value);
+});
 
 </script>
 
 <template>
   <div class="epg-main">
-    <div class="epg-date">
-      <div class="weekdays-container">
-        <button v-for="w in curWeekdays" class="weekday-item" :class="{'weekday-item-cur': w.hasSame(selDate, 'day')}"
-                @click="selWeekdayAction(w)">
-          <span class="text-center">{{ w.toFormat('EEEE') }}</span>
-          <span class="text-center">{{ w.toISODate() }}</span>
-        </button>
-
-        <button class="cal-container">
-          <span class="cal-btn-content">往日节目单</span>
-
-          <span class="cal-popup" @click.stop.prevent>
-            <template v-for="(days,ym) in calWeekdays">
-              <div class="cal-ym-title-container"><button class="cal-ym-month-btn"
-                                                          @click="prevMonAction(ym)">&lt;</button>{{
-                  ym
-                }}<button
-                    class="cal-ym-month-btn" @click="nextMonAction(ym)">&gt;</button></div>
-              <div class="cal-week-container">
-                <span v-for="d in weekdays" class="cal-weekday-title">{{ d }}</span>
-                <button v-for="d in days" class="cal-day"
-                        :class="{'cal-day-invalid': !d?.valid, 'cal-day-sel': d?.hasSame(selDate, 'day'), 'cal-day-today': d?.hasSame(DateTime.now(), 'day')}"
-                        @click="selWeekdayAction(d)">{{ d?.day ?? '' }}
-                </button>
-              </div>
-            </template>
-          </span>
-        </button>
-      </div>
-
-    </div>
-
-    <div class="epg-channels">
-      <button v-for="c in channels" @click="selChannelAction(c.id)" class="channel-link"
-              :class="{'channel-link-cur': c.id===selChannelId}">
-        <span class="channel-link-logo">C<span class="red">C</span>TV<span class="channel-link-logo-no">{{
-            c.no
-          }}</span>
-        </span>
-        <span class="channel-link-text">{{ c.name }}</span>
+    <div class="epg-date weekdays-container">
+      <button v-for="w in curWeekdays" class="weekday-item" :class="{'weekday-item-cur': w.hasSame(selDate, 'day')}"
+              @click="selDateAction(w)">
+        <span class="text-center">{{ w.toFormat('EEEE') }}</span>
+        <span class="text-center">{{ w.toISODate() }}</span>
       </button>
+
+      <button class="cal-container">
+        <span class="cal-btn-content">往日节目单</span>
+
+        <epg-calendar :sel-date="selDate" @date-sel="selDateAction"/>
+      </button>
+
     </div>
 
-    <div class="epg-guides" :class="{'epg-guides-fetching': statefulFetch.fetching.value}">
-      <div v-if="statefulFetch.error.value">网络遇到错误</div>
+    <layout-list-channel class="layout-channels" @channel-sel="selChannelAction"
+                         :sel-channel-id="selChannelId"></layout-list-channel>
 
-      <template v-if="epg && !statefulFetch.error.value">
-        <template
-            v-for="p in [{title: '上午 （00:00-12:00）',programmes:epg.amList},{title: '下午 （12:00-24:00）',programmes:epg.pmList}]">
-          <div class="epg-period-title">{{ p.title }}</div>
-          <div v-for="e in p.programmes" class="epg-item">
-            <span class="epg-item-time">{{
-                DateTime.fromSeconds(e.startTime).toLocaleString(DateTime.TIME_24_SIMPLE)
-              }}</span>
+    <div class="epg-guides" :class="{'epg-guides-fetching': appFetch.fetching.value}" ref="programme-layout">
+      <div v-if="appFetch.error.value">网络遇到错误</div>
 
-            <span class="copy-all flex-grow epg-item-title"
-                  :class="{'epg-item-current-title': timeState(e) === 'live'}">{{ e.title }}</span>
+      <template v-if="epg && !appFetch.error.value">
+        <div class="epg-period-title">上午 （00:00-12:00）</div>
+        <epg-programme v-for="item in epg.amList" :item="item"
+                       :data-live-item="item.timeState === 'live' ? '' : undefined"/>
 
-            <a class="epg-item-column" target="column"
-               :href="e.column_url" v-if="e.column_url">往期视频</a>
-
-            <a class="epg-item-link epg-item-link-back" target="playback"
-               :href="renderPlaybackUrl(epg.lvUrl, e.startTime, e.endTime)"
-               :class="{'epg-item-link-disabled': selDate < DateTime.now().plus({day:-7})}"
-               v-if="timeState(e) === 'past'"
-            >回看</a>
-
-            <a class="epg-item-link epg-item-link-live" target="live"
-               :href="epg?.lvUrl" v-else-if="timeState(e) === 'live'"
-               ref="liveProgramme">直播中</a>
-
-            <span v-else class="epg-item-link epg-item-link-future">未开始</span>
-          </div>
-        </template>
+        <div class="epg-period-title">下午 （12:00-24:00）</div>
+        <epg-programme v-for="item in epg.pmList" :item="item"
+                       :data-live-item="item.timeState === 'live' ? '' : undefined"/>
 
       </template>
 
@@ -167,13 +151,6 @@ getEpgHandler();
 </template>
 
 <style>
-html, body, #app {
-  margin: 0;
-  padding: 0;
-  height: 100%;
-  width: 100%;
-}
-
 .epg-main {
   /*margin: 0;*/
   margin: 0 auto;
@@ -194,18 +171,10 @@ html, body, #app {
   padding: 8px 0;
 }
 
-.epg-channels {
+.layout-channels {
   grid-row: 2 / 3;
-  overflow-y: auto;
 
   width: 180px;
-
-  display: flex;
-  flex-direction: column;
-
-  transition: filter .2s;
-
-  scrollbar-width: thin;
 }
 
 .epg-guides {
@@ -242,10 +211,11 @@ html, body, #app {
 }
 
 .cal-container {
-  position: relative;
-
   border: none;
   background: none;
+  padding: 0;
+
+  position: relative;
 
   display: flex;
   align-items: stretch;
@@ -261,166 +231,7 @@ html, body, #app {
   font-size: 14px;
 }
 
-.cal-popup {
-  display: none;
-  position: absolute;
-  top: 100%;
-  right: 0;
-
-  border-radius: 4px;
-
-  /*width: 300px;*/
-  box-shadow: 0 0 4px 2px lightgrey;
-  background-color: white;
-}
-
-.cal-container:hover .cal-popup, .cal-container:focus-within .cal-popup {
-  display: block;
-}
-
-.cal-ym-title-container {
-  display: flex;
-  justify-content: space-between;
-
-  font-size: 18px;
-  font-weight: 300;
-
-  padding: 4px 4px;
-}
-
-.cal-ym-month-btn {
-  border: none;
-  background: none;
-  padding: 0;
-
-  width: 20px;
-  height: 20px;
-
-  display: flex;
-  justify-content: center;
-  align-items: center;
-
-  border-radius: 200px;
-
-  font-weight: 900;
-  text-align: center;
-}
-
-.cal-ym-month-btn:hover {
-  color: deepskyblue;
-  box-shadow: 0 0 2px deepskyblue;
-}
-
-.cal-week-container {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  justify-items: center;
-}
-
-.cal-weekday-title {
-  justify-self: stretch;
-  align-self: stretch;
-
-  height: 32px;
-  width: 36px;
-
-  background-color: whitesmoke;
-
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.cal-day {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-
-  border: none;
-  /*border: 4px solid white;*/
-  background: none;
-  box-sizing: border-box;
-
-  height: 24px;
-  width: 24px;
-  /*height: 32px;
-  width: 32px;*/
-  border-radius: 200px;
-
-  cursor: pointer;
-}
-
-.cal-day-today {
-  box-shadow: 0 0 3px 1px deepskyblue;
-}
-
-.cal-day:hover, .cal-day-sel {
-  background-color: deepskyblue;
-}
-
-.cal-day-invalid {
-  pointer-events: none;
-  color: darkgrey;
-}
-
-.channel-link {
-  border: solid transparent;
-  border-width: 1px 2px;
-  background: none whitesmoke;
-
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-
-  padding: 10px 0;
-
-  cursor: pointer;
-}
-
-.channel-link:hover, .channel-link:focus, .channel-link-cur {
-  border-color: lightgrey transparent lightgrey lightskyblue;
-  background-color: white;
-}
-
-.channel-link-logo {
-  display: flex;
-  align-items: stretch;
-
-  font-size: 19px;
-  font-weight: 1000;
-  line-height: 18px;
-
-  transform: scaleX(120%);
-  transform-origin: center;
-
-  text-decoration-line: underline;
-  /*text-decoration-color: black;*/
-  text-decoration-thickness: 2px;
-  text-underline-offset: 1px;
-
-  /*box-sizing: border-box;
-  border-bottom: 2px solid black;*/
-}
-
-.channel-link-logo-no {
-  display: inline-flex;
-  width: 1.6em;
-  background-color: black;
-  color: white;
-  border-radius: 40% 40% 40% 0;
-
-  font-size: 17px;
-
-  justify-content: center;
-  align-items: stretch;
-}
-
-.channel-link-text {
-  font-size: 15px;
-  font-weight: 1000;
-}
-
-@keyframes anim-channels-fetching {
+@keyframes anim-guides-fetching {
   to {
     /*background-position-y: 67.88225px;*/
     background-position-y: 0;
@@ -436,7 +247,7 @@ html, body, #app {
   /*background-position-y: -67.88225px;*/
   background-position-y: -96px;
 
-  animation: anim-channels-fetching .25s infinite linear;
+  animation: anim-guides-fetching .25s infinite linear;
 }
 
 .epg-period-title {
@@ -445,104 +256,6 @@ html, body, #app {
   background-color: whitesmoke;
 
   font-size: 18px;
-}
-
-.epg-item {
-  padding: 12px 0;
-  /*box-sizing: border-box;*/
-
-  font-size: 18px;
-
-  display: flex;
-}
-
-.epg-item:hover, .epg-item:focus-within {
-  box-shadow: inset 0 0 6px -2px yellowgreen;
-}
-
-.epg-item-time {
-  width: 96px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.epg-item-title {
-  font-family: sans-serif;
-  line-height: 1.1;
-}
-
-.epg-item-current-title {
-  color: red;
-  font-weight: 900;
-}
-
-.epg-item-column {
-  margin-right: 16px;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  font-size: 15px;
-  text-decoration: none;
-}
-
-.epg-item-link {
-  border-radius: 80px;
-  background-color: lightgrey;
-  width: 76px;
-  padding: 3px 0;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  font-size: 14px;
-  font-weight: bold;
-  color: white;
-  text-decoration: none;
-}
-
-.epg-item-link-back {
-  background-color: dodgerblue;
-}
-
-.epg-item-link-back:hover, .epg-item-link-back:focus {
-  box-shadow: inset 0 0 0 1px dodgerblue;
-  background-color: white;
-  color: dodgerblue;
-}
-
-.epg-item-link-live {
-  background-color: red;
-}
-
-.epg-item-link-live:hover, .epg-item-link-live:focus {
-  box-shadow: inset 0 0 0 1px red;
-  background-color: white;
-  color: red;
-}
-
-.epg-item-link-disabled, .epg-item-link-future {
-  background-color: grey;
-  pointer-events: none;
-}
-
-.text-center {
-  text-align: center;
-}
-
-.red {
-  color: red;
-}
-
-.flex-grow {
-  flex-grow: 1;
-}
-
-.copy-all {
-  user-select: all;
 }
 
 </style>

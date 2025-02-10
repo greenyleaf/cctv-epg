@@ -92,7 +92,7 @@ export const calendarItemsGen = () => {
     return months;
 };
 
-export const renderPlaybackUrl = (lvUrl, start, end) => {
+export const renderProgrammeUrl = (lvUrl, start, end) => {
     /[/][^.]+$/.test(lvUrl) &&
     (lvUrl += '/');
     // return `${lvUrl}?stime=${start}&etime=${end}&type=lbacks`;
