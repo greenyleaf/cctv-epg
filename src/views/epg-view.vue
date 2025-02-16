@@ -33,6 +33,7 @@ const getEpgHandler = () => {
 
         for (const i of r.list) {
           i.startTimeText = DateTime.fromSeconds(i.startTime).toLocaleString(DateTime.TIME_24_SIMPLE);
+          i.link = renderProgrammeUrl(r.lvUrl, i.startTime, i.endTime);
         }
 
         epg.value = {
@@ -69,12 +70,10 @@ const filterEpg = () => {
       item.timeState = 'past';
 
       item.replay = item.startTime > replayStartSec;
-
-      item.link = renderProgrammeUrl(epg.value.lvUrl, item.startTime, item.endTime);
     } else if (item.startTime <= nowSec) {
       item.timeState = 'live';
 
-      item.link = epg.value.lvUrl;
+      // item.link = epg.value.lvUrl;
     } else {
       item.timeState = 'future';
     }
@@ -138,11 +137,11 @@ onUnmounted(() => {
       <template v-if="epg && !appFetch.error.value">
         <div class="epg-period-title">上午 （00:00-12:00）</div>
         <epg-programme v-for="item in epg.amList" :item="item"
-                       :data-live-item="item.timeState === 'live' ? '' : undefined"/>
+                       :data-live-item="item.timeState === 'live' ? '' : undefined" :live-url="epg.value?.lvUrl"/>
 
         <div class="epg-period-title">下午 （12:00-24:00）</div>
         <epg-programme v-for="item in epg.pmList" :item="item"
-                       :data-live-item="item.timeState === 'live' ? '' : undefined"/>
+                       :data-live-item="item.timeState === 'live' ? '' : undefined" :live-url="epg.value?.lvUrl"/>
 
       </template>
 

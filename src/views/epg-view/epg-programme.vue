@@ -2,7 +2,7 @@
 
 import LinkEpgItem from "@/views/epg-view/link-epg-item.vue";
 
-defineProps(['item']);
+defineProps(['item', 'liveUrl']);
 
 </script>
 
@@ -17,7 +17,7 @@ defineProps(['item']);
     <a class="epg-item-column" target="column"
        :href="item.column_url" v-if="item.column_url">往期视频</a>
 
-    <link-epg-item :item="item"/>
+    <link-epg-item :item="item" :live-url="liveUrl"/>
   </a>
 
 </template>

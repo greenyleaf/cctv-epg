@@ -1,6 +1,6 @@
 <script setup>
 
-defineProps(['item']);
+defineProps(['item', 'liveUrl']);
 
 </script>
 
@@ -12,9 +12,10 @@ defineProps(['item']);
   ><span class="epg-item-link-wrapper">回看</span></a>
 
   <a class="epg-item-link epg-item-link-live" target="live"
-     :href="item.link" v-else-if="item.timeState === 'live'"><span class="epg-item-link-wrapper">直播中</span></a>
+     :href="liveUrl" v-else-if="item.timeState === 'live'"><span class="epg-item-link-wrapper">直播中</span></a>
 
-  <a v-else class="epg-item-link epg-item-link-future"><span class="epg-item-link-wrapper">未开始</span></a>
+  <a :href="item.link" v-else class="epg-item-link epg-item-link-future"><span
+      class="epg-item-link-wrapper">未开始</span></a>
 </template>
 
 <style scoped>
