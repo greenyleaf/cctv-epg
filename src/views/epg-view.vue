@@ -109,6 +109,10 @@ onUnmounted(() => {
   clearTimeout(filterEpgHandle.value);
 });
 
+const liveUrl = computed(() => {
+  return epg.value?.lvUrl;
+})
+
 </script>
 
 <template>
@@ -137,11 +141,11 @@ onUnmounted(() => {
       <template v-if="epg && !appFetch.error.value">
         <div class="epg-period-title">上午 （00:00-12:00）</div>
         <epg-programme v-for="item in epg.amList" :item="item"
-                       :data-live-item="item.timeState === 'live' ? '' : undefined" :live-url="epg.value?.lvUrl"/>
+                       :data-live-item="item.timeState === 'live' ? '' : undefined" :live-url="liveUrl"/>
 
         <div class="epg-period-title">下午 （12:00-24:00）</div>
         <epg-programme v-for="item in epg.pmList" :item="item"
-                       :data-live-item="item.timeState === 'live' ? '' : undefined" :live-url="epg.value?.lvUrl"/>
+                       :data-live-item="item.timeState === 'live' ? '' : undefined" :live-url="liveUrl"/>
 
       </template>
 
