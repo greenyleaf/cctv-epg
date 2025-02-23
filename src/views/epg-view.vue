@@ -63,7 +63,7 @@ const filterEpg = () => {
   }
 
   const nowSec = Math.trunc(Date.now() / 1000);
-  const replayStartSec = DateTime.now().startOf('day').plus({day: -6}).toSeconds();
+  const replayStartSec = DateTime.now().startOf('day').plus({day: -7}).toSeconds();
 
   const setState = (item) => {
     if (item.endTime <= nowSec) {

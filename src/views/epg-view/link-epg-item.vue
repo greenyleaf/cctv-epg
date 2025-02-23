@@ -29,7 +29,7 @@ defineProps(['item', 'liveUrl']);
   text-decoration: none;
 }
 
-.epg-item-link .epg-item-link-wrapper {
+.epg-item-link-wrapper {
   border-radius: 80px;
   background-color: lightgrey;
   width: 76px;
@@ -69,6 +69,9 @@ defineProps(['item', 'liveUrl']);
 
 .epg-item-link-disabled .epg-item-link-wrapper, .epg-item-link-future .epg-item-link-wrapper {
   background-color: grey;
+}
+
+.epg-item-link-disabled, .epg-item-link-future {
   pointer-events: none;
 }
 
