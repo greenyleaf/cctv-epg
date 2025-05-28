@@ -51,6 +51,11 @@ const emit = defineEmits(['channel-sel']);
   background-color: white;
 }
 
+.channel-link:focus:not(.channel-link-cur):not(:active) {
+  outline: blue dashed 2px;
+  outline-offset: -4px;
+}
+
 .channel-link-logo {
   display: flex;
   align-items: stretch;
