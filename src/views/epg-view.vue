@@ -69,7 +69,7 @@ const filterEpg = () => {
     if (item.endTime <= nowSec) {
       item.timeState = 'past';
 
-      item.replay = item.startTime > replayStartSec;
+      item.replay = item.startTime >= replayStartSec;
     } else if (item.startTime <= nowSec) {
       item.timeState = 'live';
 
@@ -160,8 +160,8 @@ const liveUrl = computed(() => {
   padding: 0;
   box-sizing: border-box;
   height: 100%;
-  /*width: 100%;*/
-  width: 1080px;
+  /*width: 1080px;*/
+  max-width: 1080px;
 
   display: grid;
   grid-template-rows: auto 1fr;
@@ -177,7 +177,7 @@ const liveUrl = computed(() => {
 .layout-channels {
   grid-row: 2 / 3;
 
-  width: 180px;
+  width: 136px;
 }
 
 .epg-guides {
@@ -188,9 +188,14 @@ const liveUrl = computed(() => {
 
 .weekdays-container {
   display: flex;
-  gap: 12px;
+  gap: 4px;
 
   align-items: stretch;
+
+  background-image: linear-gradient(lightgreen, transparent 33%);
+
+  /*overflow-x: scroll;*/
+  scrollbar-width: thin;
 }
 
 .weekday-item {
@@ -210,7 +215,8 @@ const liveUrl = computed(() => {
 }
 
 .weekday-item:hover, .weekday-item-cur, .cal-container:hover .cal-btn-content, .cal-container:focus-within .cal-btn-content {
-  background-color: yellowgreen;
+  /*background-color: yellowgreen;*/
+  background-color: #9acd32a0;
 }
 
 .cal-container {

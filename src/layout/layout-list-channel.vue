@@ -41,7 +41,7 @@ const emit = defineEmits(['channel-sel']);
   flex-direction: column;
   align-items: center;
 
-  padding: 10px 0;
+  padding: 8px 0;
 
   cursor: pointer;
 }
