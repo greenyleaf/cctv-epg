@@ -171,7 +171,7 @@ const liveUrl = computed(() => {
 .epg-date {
   grid-column: 2 / 3;
 
-  padding: 8px 0;
+  padding: 4px 0;
 }
 
 .layout-channels {
@@ -188,7 +188,7 @@ const liveUrl = computed(() => {
 
 .weekdays-container {
   display: flex;
-  gap: 4px;
+  gap: 2px;
   flex-wrap: wrap;
 
   align-items: stretch;
