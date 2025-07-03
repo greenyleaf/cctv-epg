@@ -8,14 +8,17 @@ defineProps(['item', 'liveUrl']);
 
 <template>
   <a class="epg-item"
-     :class="{'epg-item-replay': item.replay, 'epg-item-past': item.timeState === 'past', 'epg-item-live': item.timeState === 'live', 'epg-item-future': item.timeState === 'future'}">
+     target="playback"
+     :class="{'epg-item-replay': item.replay, 'epg-item-past': item.timeState === 'past', 'epg-item-live': item.timeState === 'live', 'epg-item-future': item.timeState === 'future'}"
+  >
+    <!--:href="item.replay ? item.link : item.timeState === 'live' ? liveUrl : undefined"-->
     <span class="epg-item-time">{{ item.startTimeText }}</span>
 
     <span class="select-all flex-grow epg-item-title"
           :class="{'epg-item-current-title': item.timeState === 'live'}">{{ item.title }}</span>
 
     <a class="epg-item-column" target="column"
-       :href="item.column_url" v-if="item.column_url">往期视频</a>
+       :href="item.column_url" v-if="item.column_url">往期</a>
 
     <link-epg-item :item="item" :live-url="liveUrl"/>
   </a>
@@ -30,6 +33,7 @@ defineProps(['item', 'liveUrl']);
   display: flex;
 
   font-size: 18px;
+  color: black;
   text-decoration: none;
 }
 
@@ -64,8 +68,7 @@ defineProps(['item', 'liveUrl']);
 }
 
 .epg-item-column {
-  padding: 0 6px;
-  /*margin-right: 12px;*/
+  padding: 0 2px;
 
   display: flex;
   align-items: center;

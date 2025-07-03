@@ -58,6 +58,8 @@ const nextMonAction = (ym) => {
   /*width: 300px;*/
   box-shadow: 0 0 4px 2px lightgrey;
   background-color: white;
+
+  z-index: 1000;
 }
 
 .cal-container:hover .cal-popup, .cal-container:focus-within .cal-popup {
