@@ -24,10 +24,9 @@ defineProps(['item', 'liveUrl']);
 
 <style scoped>
 .epg-item {
-  /*padding: 12px 0;*/
   /*box-sizing: border-box;*/
 
-  min-height: 45px;
+  /*min-height: 45px;*/
   display: flex;
 
   font-size: 18px;
@@ -50,7 +49,7 @@ defineProps(['item', 'liveUrl']);
 }
 
 .epg-item-title {
-  /*padding: 12px 0;*/
+  padding: 6px 0;
 
   display: flex;
   align-items: center;
