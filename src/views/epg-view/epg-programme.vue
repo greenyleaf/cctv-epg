@@ -27,7 +27,7 @@ defineProps(['item', 'liveUrl']);
   /*padding: 12px 0;*/
   /*box-sizing: border-box;*/
 
-  height: 45px;
+  min-height: 45px;
   display: flex;
 
   font-size: 18px;
@@ -39,9 +39,11 @@ defineProps(['item', 'liveUrl']);
 }
 
 .epg-item-time {
-  width: 88px;
+  /*width: 88px;*/
   display: flex;
-  /*padding: 12px 0;*/
+  padding: 0 10px;
+
+  flex: 0 0;
 
   justify-content: center;
   align-items: center;
@@ -77,7 +79,8 @@ defineProps(['item', 'liveUrl']);
 }
 
 .epg-item-column:hover, .epg-item-column:focus {
-  text-shadow: 0 0 12px #b0bec5;
+  text-shadow: 0 0 12px lightgoldenrodyellow;
+  color: blue;
 }
 
 .epg-item-past {

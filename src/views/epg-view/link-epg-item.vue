@@ -20,7 +20,7 @@ defineProps(['item', 'liveUrl']);
 
 <style scoped>
 .epg-item-link {
-  padding: 0 6px;
+  padding: 0 2px;
 
   display: flex;
   align-items: center;
@@ -32,7 +32,7 @@ defineProps(['item', 'liveUrl']);
 .epg-item-link-wrapper {
   border-radius: 80px;
   background-color: lightgrey;
-  width: 76px;
+  width: 64px;
   padding: 4px 0;
 
   display: flex;
