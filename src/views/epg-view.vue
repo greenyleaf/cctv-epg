@@ -6,9 +6,9 @@ import {curWeekdaysGen, renderProgrammeUrl} from "@/util/app-utils.js";
 import {DateTime, Settings} from "luxon";
 import {computed, nextTick, onBeforeMount, onUnmounted, ref, useTemplateRef} from "vue";
 import {useStatefulFetch} from "@/composables/statefulFetch.js";
-import LayoutListChannel from "@/layout/layout-list-channel.vue";
+import EpgChannel from "@/views/epg-view/epg-channel.vue";
 import EpgCalendar from "@/views/epg-view/epg-calendar.vue";
-import EpgProgramme from "@/views/epg-view/epg-programme.vue";
+import EpgItem from "@/views/epg-view/epg-item.vue";
 
 Settings.defaultLocale = 'zh-CN';
 
@@ -132,20 +132,20 @@ const liveUrl = computed(() => {
 
     </div>
 
-    <layout-list-channel class="layout-channels" @channel-sel="selChannelAction"
-                         :sel-channel-id="selChannelId"></layout-list-channel>
+    <epg-channel class="layout-channels" @channel-sel="selChannelAction"
+                 :sel-channel-id="selChannelId"></epg-channel>
 
     <div class="epg-guides" :class="{'epg-guides-fetching': appFetch.fetching.value}" ref="programme-layout">
       <div v-if="appFetch.error.value">网络遇到错误</div>
 
       <template v-if="epg && !appFetch.error.value">
         <div class="epg-period-title">上午 （00:00-12:00）</div>
-        <epg-programme v-for="item in epg.amList" :item="item"
-                       :data-live-item="item.timeState === 'live' ? '' : undefined" :live-url="liveUrl"/>
+        <epg-item v-for="item in epg.amList" :item="item"
+                  :data-live-item="item.timeState === 'live' ? '' : undefined" :live-url="liveUrl"/>
 
         <div class="epg-period-title">下午 （12:00-24:00）</div>
-        <epg-programme v-for="item in epg.pmList" :item="item"
-                       :data-live-item="item.timeState === 'live' ? '' : undefined" :live-url="liveUrl"/>
+        <epg-item v-for="item in epg.pmList" :item="item"
+                  :data-live-item="item.timeState === 'live' ? '' : undefined" :live-url="liveUrl"/>
 
       </template>
 
@@ -171,7 +171,7 @@ const liveUrl = computed(() => {
 .epg-date {
   grid-column: 2 / 3;
 
-  padding: 4px 0;
+  padding: 3px 0;
 }
 
 .layout-channels {
@@ -184,6 +184,8 @@ const liveUrl = computed(() => {
   overflow-y: auto;
 
   scrollbar-width: thin;
+
+  font-size: 16px;
 }
 
 .weekdays-container {
@@ -193,10 +195,12 @@ const liveUrl = computed(() => {
 
   align-items: stretch;
 
-  background-image: linear-gradient(lightgreen, transparent 33%);
+  background-image: linear-gradient(lightgreen, transparent 36%);
 
   /*overflow-x: scroll;*/
   scrollbar-width: thin;
+
+  font-size: 13px;
 }
 
 .weekday-item {
@@ -210,7 +214,7 @@ const liveUrl = computed(() => {
   display: flex;
   flex-direction: column;
 
-  font-size: 14px;
+  /*font-size: 13px;*/
 
   cursor: pointer;
 }
@@ -238,7 +242,7 @@ const liveUrl = computed(() => {
   border-radius: 8px;
   padding: 4px 6px;
 
-  font-size: 14px;
+  /*font-size: 13px;*/
 }
 
 @keyframes anim-guides-fetching {
@@ -265,7 +269,7 @@ const liveUrl = computed(() => {
 
   background-color: whitesmoke;
 
-  font-size: 18px;
+  font-weight: 700;
 }
 
 </style>

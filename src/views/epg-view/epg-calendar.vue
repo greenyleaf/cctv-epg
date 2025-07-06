@@ -70,7 +70,7 @@ const nextMonAction = (ym) => {
   display: flex;
   justify-content: space-between;
 
-  font-size: 18px;
+  /*font-size: 18px;*/
   font-weight: 300;
 
   padding: 4px 4px;

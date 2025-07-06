@@ -1,6 +1,6 @@
 <script setup>
 
-import LinkEpgItem from "@/views/epg-view/link-epg-item.vue";
+import EpgItemLink from "@/views/epg-view/epg-item/epg-item-link.vue";
 
 defineProps(['item', 'liveUrl']);
 
@@ -20,25 +20,21 @@ defineProps(['item', 'liveUrl']);
     <a class="epg-item-column" target="column"
        :href="item.column_url" v-if="item.column_url">往期</a>
 
-    <link-epg-item :item="item" :live-url="liveUrl"/>
+    <epg-item-link :item="item" :live-url="liveUrl"/>
   </a>
 
 </template>
 
 <style scoped>
 .epg-item {
-  /*box-sizing: border-box;*/
-
-  /*min-height: 45px;*/
   display: flex;
 
-  font-size: 18px;
   color: black;
   text-decoration: none;
 }
 
 .epg-item:hover, .epg-item:focus-within {
-  box-shadow: inset 0 0 6px -2px yellowgreen;
+  box-shadow: inset 0 0 10px -1px yellowgreen;
 }
 
 .epg-item-time {
@@ -50,6 +46,9 @@ defineProps(['item', 'liveUrl']);
 
   justify-content: center;
   align-items: center;
+
+  font-weight: 700;
+  font-family: monospace;
 }
 
 .epg-item-title {
@@ -60,6 +59,8 @@ defineProps(['item', 'liveUrl']);
 
   font-family: sans-serif;
   /*line-height: 1.1;*/
+
+  line-break: anywhere;
 }
 
 .epg-item-current-title {
@@ -74,10 +75,12 @@ defineProps(['item', 'liveUrl']);
   align-items: center;
   justify-content: center;
 
-  font-size: 15px;
+  font-size: 14px;
   text-decoration: none;
   font-weight: 900;
   text-shadow: 0 0 5px #b0bec5;
+
+  word-break: keep-all;
 }
 
 .epg-item-column:hover, .epg-item-column:focus {
