@@ -29,6 +29,8 @@ const getEpgHandler = () => {
 
   appFetch.statefulFetch(selChannelId.value, selDate.value.toFormat('yyyyMMdd'))
       .then(r => {
+        r.list ??= [];
+
         const idx = r.list.findIndex(e => e.startTime >= noon);
 
         for (const i of r.list) {
