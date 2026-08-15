@@ -120,7 +120,8 @@ const liveUrl = computed(() => {
 <template>
   <div class="epg-main">
     <div class="epg-date weekdays-container">
-      <button v-for="w in curWeekdays" class="weekday-item" :class="{'weekday-item-cur': w.hasSame(selDate, 'day')}"
+      <button v-for="w in curWeekdays" class="weekday-item"
+              :class="{'weekday-item-cur': w.hasSame(selDate, 'day'), 'weekday-item-today': w?.hasSame(DateTime.now(), 'day')}"
               @click="selDateAction(w)">
         <span class="text-center">{{ w.toFormat('EEEE') }}</span>
         <span class="text-center">{{ w.toISODate() }}</span>
@@ -224,6 +225,10 @@ const liveUrl = computed(() => {
 .weekday-item:hover, .weekday-item-cur, .cal-container:hover .cal-btn-content, .cal-container:focus-within .cal-btn-content {
   /*background-color: yellowgreen;*/
   background-color: #9acd32a0;
+}
+
+.weekday-item-today {
+  box-shadow: 0 0 4px black;
 }
 
 .cal-container {
